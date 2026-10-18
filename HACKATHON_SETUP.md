@@ -1,6 +1,8 @@
-# EZ Hack: Hackathon Team Routine
+# EZ Hack: Play With a Friend
 
-This guide takes a small hackathon team from a private GitHub repository to one running host and several connected operators.
+This is the practical first-run guide for you and a friend. One of you runs the **host**; the other joins as an **operator**. The host does the main project work. The operator talks with their user, checks shared progress, and sends clear proposals to the host.
+
+The project is currently in a private GitHub repository, so both people need access to it. You can follow these steps on separate computers. At the end there is a same-computer option for a quick local experiment.
 
 ## What the team is setting up
 
@@ -11,7 +13,45 @@ This guide takes a small hackathon team from a private GitHub repository to one 
 
 The host computer must remain online while the team is using EZ Hack.
 
-## 1. Prepare the team
+## 1. Give your friend GitHub access
+
+The repository owner adds the friend as a collaborator:
+
+1. Open [EZ Hack on GitHub](https://github.com/Keming-Hu/EZ-Hack).
+2. Open **Settings → Collaborators**.
+3. Add your friend's GitHub username and have them accept the invitation.
+
+The repository is private, so a friend cannot clone it until access is accepted.
+
+## 2. Install EZ Hack on both computers
+
+Both people need Git and Python 3.11 or newer. The friend also needs GitHub CLI (`gh`) and a GitHub login that can access this private repository.
+
+Each person runs:
+
+```bash
+gh auth login
+gh repo clone Keming-Hu/EZ-Hack
+cd EZ-Hack
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install .
+```
+
+On Windows PowerShell:
+
+```powershell
+gh auth login
+gh repo clone Keming-Hu/EZ-Hack
+cd EZ-Hack
+py -3 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install .
+```
+
+Keep the terminal open or activate `.venv` again whenever opening a new terminal. Run the `ez-hack` commands below from this cloned project directory.
+
+## 3. Pick who does what
 
 Choose:
 
@@ -30,51 +70,23 @@ Access levels work as follows:
 
 All operator changes are proposals. A high level does not bypass host review.
 
-## 2. Install EZ Hack from the private repository
+## 4. Choose local or two-computer play
 
-While the repository is private, the repository owner must add every teammate as a GitHub collaborator before they clone it.
+For the quickest experiment, keep the host and operator on the same computer. Use `http://127.0.0.1:8000`; no tunnel is needed.
 
-Each teammate installs Git, Python 3.11 or newer, and GitHub CLI. Authenticate once:
-
-```bash
-gh auth login
-```
-
-Then clone and install:
-
-```bash
-gh repo clone Keming-Hu/EZ-Hack
-cd EZ-Hack
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install .
-```
-
-On Windows PowerShell, activate the environment with:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-Run EZ Hack commands from the cloned project directory with the virtual environment active.
-
-## 3. Give the host a secure address
-
-Operators on other computers cannot reach `127.0.0.1`. Before host setup, expose port 8000 through an HTTPS tunnel or a TLS reverse proxy.
-
-Assume the resulting public address is:
+For two computers, `127.0.0.1` points to each person's own computer, so it cannot connect the operator to the host. The host must expose port 8000 through an HTTPS tunnel or TLS reverse proxy. Use a tunnel service your team trusts and keep it running during the session. Assume its public address is:
 
 ```text
 https://team-host.example
 ```
 
-The MCP URL is `https://team-host.example/mcp`, and the invitation redemption URL is `https://team-host.example/join`.
+The MCP URL is `https://team-host.example/mcp`, and the invitation redemption URL is `https://team-host.example/join`. Use your actual tunnel hostname everywhere in this guide.
 
 Do not expose the service as plain HTTP over the internet. Localhost HTTP is suitable only when every simulated agent runs on the same computer.
 
-## 4. Initialize and start the host
+## 5. Initialize and start the host
 
-The host runs:
+Choose one setup command. For two computers, the host runs:
 
 ```bash
 ez-hack host setup \
@@ -84,7 +96,7 @@ ez-hack host setup \
 
 This command generates the only host identity and saves its credential under `.ez-hack/`.
 
-Before starting the service, configure its public address and accepted hostname:
+Before starting the service, set its public address and accepted hostname. These values must match the HTTPS tunnel hostname:
 
 ```bash
 export EZ_HACK_PUBLIC_URL="https://team-host.example/mcp"
@@ -95,14 +107,14 @@ ez-hack host start
 
 Keep that terminal open. Use another terminal, with the same virtual environment active, for host administration commands.
 
-For a same-computer experiment, skip the public-address environment variables and use:
+For a same-computer experiment, use this setup command instead and skip the public-address variables:
 
 ```bash
 ez-hack host setup --name "Team Host"
 ez-hack host start
 ```
 
-## 5. Connect the host coding agent
+## 6. Connect the host coding agent
 
 In a second host terminal:
 
@@ -112,7 +124,7 @@ ez-hack codex-setup --credentials .ez-hack/host-credentials.json
 
 Run the two commands printed by EZ Hack in the terminal that launches Codex. The generated MCP registration follows the Codex CLI pattern documented by OpenAI: `codex mcp add <name> --url <url>`.
 
-Start the host coding-agent conversation in the repository and tell it:
+Restart Codex after adding the MCP server if it was already running. Start the host coding-agent conversation in the repository and tell it:
 
 > Read `host/SKILL.md` and follow it as the EZ Hack host for this project.
 
@@ -122,9 +134,9 @@ The MCP configuration is shared by Codex CLI and its IDE extension. Confirm the 
 codex mcp list
 ```
 
-For another MCP-capable agent, register the same MCP URL with the bearer token stored in the host credential file, then give that agent `host/SKILL.md` as its workflow instructions.
+For another MCP-capable agent, register the same MCP URL with the bearer token stored in the host credential file, then give that agent `host/SKILL.md` as its workflow instructions. Keep the host credential private; only share invitation codes with operators.
 
-## 6. Create one invitation per operator
+## 7. Create an invitation for your friend
 
 The host creates a separate invitation for each teammate:
 
@@ -148,9 +160,9 @@ Send the join URL and invitation code directly to the intended teammate through 
 
 The level is visible in the invitation for clarity, but it is also bound to the hashed server record. Editing `l10` to another value makes the invitation invalid.
 
-## 7. Let each operator generate an identity
+## 8. Your friend generates their operator identity
 
-On the operator's computer:
+On the operator's computer (use the local URL instead if both agents are on one computer):
 
 ```bash
 ez-hack operator setup \
@@ -168,7 +180,7 @@ The command:
 
 The operator sends only the displayed UUID back to the host through the trusted team channel. The bearer credential remains private on the operator's computer.
 
-## 8. Verify and approve the operator
+## 9. Verify and approve your friend
 
 The host lists pending identities:
 
@@ -194,7 +206,7 @@ The host can change an operator's level at any time:
 ez-hack host access "operator-uuid-or-exact-name" --level 25
 ```
 
-## 9. Connect each operator coding agent
+## 10. Connect the operator coding agent
 
 Each approved operator runs:
 
@@ -206,9 +218,9 @@ Run the printed commands in the terminal that launches that operator's Codex ses
 
 > Read `operator/SKILL.md` and follow it as an EZ Hack operator for this project.
 
-The operator can call `whoami` to confirm its UUID, role, and current access level.
+Restart the operator's agent after registering MCP if it was already running. The operator can call `whoami` to confirm its UUID, role, and current access level.
 
-## 10. Configure completion broadcasts
+## 11. Set who should receive completion broadcasts
 
 After the relevant operators are active, the host defines directed routes:
 
@@ -228,31 +240,29 @@ ez-hack host route remove "Alice"
 
 The CLI updates both the runtime database and the readable `host/CONTACT_MAP.md` file.
 
-## 11. Run the hackathon workflow
+## 12. Try a first proposal together
 
 ### Operator routine
 
-1. Discuss the teammate's idea privately.
-2. Read `PROJECT_CONTEXT.md` through MCP for stable project background.
-3. Read `DASHBOARD.md` through MCP for current progress.
-4. Turn a settled change into a concise proposal.
-5. Submit it with the expected result, affected tasks, and current dashboard revision.
-6. Give the teammate the returned request ID.
-7. Check request status and notifications for the host's decision.
+Start the operator conversation with:
+
+> Read `operator/SKILL.md` and act as the operator for this project. Check the shared project context and dashboard, then help me prepare a small, concrete proposal for the host: [describe the change]. Submit it when the request is clear, and give me the request ID.
+
+Choose a change that fits the host's agreed task. Save the request ID and check its status and notifications for the host's decision.
 
 Operators should answer progress questions from shared status instead of sending routine questions to the host.
 
 ### Host routine
 
-1. Keep working on the main project task.
-2. Finish the current atomic subtask before checking incoming work.
-3. At a safe checkpoint, claim one queued proposal.
-4. Review its authenticated sender, access level, expected result, affected tasks, and dashboard revision.
-5. Complete, reject, or defer it.
-6. Record the outcome and resume the saved main-workflow continuation point.
-7. Update the dashboard only at meaningful milestones.
+Start the host conversation with:
 
-## 12. Start-of-day checklist
+> Read `host/SKILL.md`. Work on this small project task: [describe the task]. Keep the work in clear atomic steps, update the dashboard at meaningful milestones, and check the EZ Hack request queue at safe checkpoints.
+
+When a request arrives, the host reviews it against the task, completes, rejects, or defers it, then reports the outcome through MCP. Confirm the operator receives the notification.
+
+The host decides when to act. Submitting a proposal does not interrupt an atomic step or guarantee acceptance.
+
+## 13. Start the service again later
 
 The host:
 
@@ -271,7 +281,7 @@ Then:
 
 Each operator activates its environment, starts its agent with the saved bearer-token environment variable, and confirms `whoami`.
 
-## 13. End-of-day checklist
+## 14. End the session safely
 
 1. Stop accepting new work.
 2. Let the host process or deliberately defer queued proposals.
